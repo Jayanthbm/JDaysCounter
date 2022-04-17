@@ -24,6 +24,7 @@ import {
   Keyboard,
   View,
   Text,
+  Platform,
 } from 'react-native';
 import {
   getDBConnection,
@@ -228,6 +229,7 @@ const App = () => {
     setUpdateRepeat('yearly');
     setUpdateModal(false);
     setDeleteModal(false);
+    setDeleteId(null);
     setReload(!reload);
   };
 
@@ -264,39 +266,49 @@ const App = () => {
   }
   const JList = ({data}) => {
     return (
-      <Card>
+      <Card
+        style={styles.cardStyle}
+        onLongPress={() => {
+          setUpdateModal(true);
+          setUpdateId(data.id);
+          setDeleteId(data.id);
+          setUpdateName(data.name);
+          setUpdateDate(data.date.toString());
+          setUpdateMonth(data.month);
+          setUpdateRepeat(data.repeat);
+        }}>
         <List.Item
           title={data.name}
           description={`In ${data.remainingDays} days`}
           left={props => (
             <List.Icon {...props} icon="calendar-alert" color="#33b5e5" />
           )}
-          right={props => (
-            <React.Fragment>
-              <TouchableOpacity
-                onPress={() => {
-                  setUpdateModal(true);
-                  setUpdateId(data.id);
-                  setUpdateName(data.name);
-                  setUpdateDate(data.date.toString());
-                  setUpdateMonth(data.month);
-                  setUpdateRepeat(data.repeat);
-                }}>
-                <List.Icon
-                  {...props}
-                  icon="circle-edit-outline"
-                  color="#FF8800"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  setDeleteModal(true);
-                  setDeleteId(data.id);
-                }}>
-                <List.Icon {...props} icon="delete" color="#ff4444" />
-              </TouchableOpacity>
-            </React.Fragment>
-          )}
+          // right={props => (
+          //   <React.Fragment>
+          //     <TouchableOpacity
+          //       onPress={() => {
+          //         setUpdateModal(true);
+          //         setUpdateId(data.id);
+          //         setUpdateName(data.name);
+          //         setUpdateDate(data.date.toString());
+          //         setUpdateMonth(data.month);
+          //         setUpdateRepeat(data.repeat);
+          //       }}>
+          //       <List.Icon
+          //         {...props}
+          //         icon="circle-edit-outline"
+          //         color="#FF8800"
+          //       />
+          //     </TouchableOpacity>
+          //     <TouchableOpacity
+          //       onPress={() => {
+          //         setDeleteModal(true);
+          //         setDeleteId(data.id);
+          //       }}>
+          //       <List.Icon {...props} icon="delete" color="#ff4444" />
+          //     </TouchableOpacity>
+          //   </React.Fragment>
+          // )}
           titleStyle={styles.listTitle}
           descriptionStyle={[
             {...styles.listDescription, color: getColor(data.remainingDays)},
@@ -363,6 +375,9 @@ const App = () => {
       textTransform: 'capitalize',
       marginLeft: 20,
     },
+    cardStyle: {
+      marginBottom: 10,
+    },
   });
 
   const pickerSelectStyles = StyleSheet.create({
@@ -374,7 +389,7 @@ const App = () => {
       backgroundColor: colorScheme === 'dark' ? '#121212' : '#f6f6f6',
       borderColor: 'gray',
       borderRadius: 4,
-      color: 'black',
+      color: colorScheme === 'dark' ? '#fff' : '#000',
       paddingRight: 30,
     },
     inputAndroid: {
@@ -385,7 +400,7 @@ const App = () => {
       backgroundColor: colorScheme === 'dark' ? '#121212' : '#f6f6f6',
       borderColor: 'purple',
       borderRadius: 8,
-      color: 'black',
+      color: colorScheme === 'dark' ? '#fff' : '#000',
       paddingRight: 30,
     },
   });
@@ -435,130 +450,145 @@ const App = () => {
             </Button>
           </React.Fragment>
         )}
+        <Dialog visible={addModal} onDismiss={resetValues}>
+          <Dialog.Title>Add New</Dialog.Title>
+          <Dialog.Content>
+            <Caption>Name</Caption>
+            <TextInput
+              label="Name"
+              value={name}
+              mode="outlined"
+              onChangeText={text => setName(text)}
+              keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
+              inputAccessoryViewID={inputAccessoryViewID}
+            />
+            <Caption>Repeats</Caption>
+            <RNPickerSelect
+              onValueChange={value => setRepeat(value)}
+              items={[
+                {label: 'Yearly', value: 'yearly'},
+                {label: 'Monthly', value: 'monthly'},
+              ]}
+              value={repeat}
+              style={pickerSelectStyles}
+            />
+            {repeat === 'yearly' && (
+              <React.Fragment>
+                <Caption>Month</Caption>
+                <RNPickerSelect
+                  onValueChange={value => setMonth(value)}
+                  items={[
+                    {label: 'January', value: 'January'},
+                    {label: 'February', value: 'February'},
+                    {label: 'March', value: 'March'},
+                    {label: 'April', value: 'April'},
+                    {label: 'May', value: 'May'},
+                    {label: 'June', value: 'June'},
+                    {label: 'July', value: 'July'},
+                    {label: 'August', value: 'August'},
+                    {label: 'September', value: 'September'},
+                    {label: 'October', value: 'October'},
+                    {label: 'November', value: 'November'},
+                    {label: 'December', value: 'December'},
+                  ]}
+                  value={month}
+                  style={pickerSelectStyles}
+                />
+              </React.Fragment>
+            )}
+            <Caption>Day</Caption>
+            <TextInput
+              label="Day"
+              value={date}
+              keyboardType="number-pad"
+              mode="outlined"
+              onChangeText={text => setDate(text)}
+              inputAccessoryViewID={inputAccessoryViewID}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button
+              onPress={() => {
+                setAddModal(false);
+              }}>
+              Cancel
+            </Button>
+            <Button onPress={addData}>Add</Button>
+          </Dialog.Actions>
+        </Dialog>
+        <Dialog visible={updateModal} onDismiss={resetValues}>
+          <Dialog.Title>Editing {updateName}</Dialog.Title>
+          <Dialog.Content>
+            <Caption>Name</Caption>
+
+            <TextInput
+              label="Name"
+              value={updateName}
+              mode="outlined"
+              onChangeText={text => setUpdateName(text)}
+              inputAccessoryViewID={inputAccessoryViewID}
+            />
+            <Caption>Repeats</Caption>
+            <RNPickerSelect
+              onValueChange={value => setUpdateRepeat(value)}
+              items={[
+                {label: 'Yearly', value: 'yearly'},
+                {label: 'Monthly', value: 'monthly'},
+              ]}
+              value={updateRepeat}
+              style={pickerSelectStyles}
+            />
+            {updateRepeat === 'yearly' && (
+              <React.Fragment>
+                <Caption>Month</Caption>
+                <RNPickerSelect
+                  onValueChange={value => setUpdateMonth(value)}
+                  items={[
+                    {label: 'January', value: 'January'},
+                    {label: 'February', value: 'February'},
+                    {label: 'March', value: 'March'},
+                    {label: 'April', value: 'April'},
+                    {label: 'May', value: 'May'},
+                    {label: 'June', value: 'June'},
+                    {label: 'July', value: 'July'},
+                    {label: 'August', value: 'August'},
+                    {label: 'September', value: 'September'},
+                    {label: 'October', value: 'October'},
+                    {label: 'November', value: 'November'},
+                    {label: 'December', value: 'December'},
+                  ]}
+                  value={updateMonth}
+                  style={pickerSelectStyles}
+                />
+              </React.Fragment>
+            )}
+            <Caption>Day</Caption>
+            <TextInput
+              label="Day"
+              value={updateDate}
+              keyboardType="number-pad"
+              mode="outlined"
+              onChangeText={text => setUpdateDate(text)}
+              inputAccessoryViewID={inputAccessoryViewID}
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button
+              onPress={() => {
+                setDeleteModal(true);
+              }}>
+              Delete
+            </Button>
+            <Button
+              onPress={() => {
+                setUpdateModal(false);
+              }}>
+              Cancel
+            </Button>
+            <Button onPress={updateItem}>Update</Button>
+          </Dialog.Actions>
+        </Dialog>
       </SafeAreaView>
-
-      <Dialog visible={addModal} onDismiss={resetValues}>
-        <Dialog.Title>Add New</Dialog.Title>
-        <Dialog.Content>
-          <Caption>Name</Caption>
-          <TextInput
-            label="Name"
-            value={name}
-            mode="outlined"
-            onChangeText={text => setName(text)}
-            keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
-            inputAccessoryViewID={inputAccessoryViewID}
-          />
-          <Caption>Repeats</Caption>
-          <RNPickerSelect
-            onValueChange={value => setRepeat(value)}
-            items={[
-              {label: 'Yearly', value: 'yearly'},
-              {label: 'Monthly', value: 'monthly'},
-            ]}
-            value={repeat}
-            style={pickerSelectStyles}
-          />
-          {repeat === 'yearly' && (
-            <React.Fragment>
-              <Caption>Month</Caption>
-              <RNPickerSelect
-                onValueChange={value => setMonth(value)}
-                items={[
-                  {label: 'January', value: 'January'},
-                  {label: 'February', value: 'February'},
-                  {label: 'March', value: 'March'},
-                  {label: 'April', value: 'April'},
-                  {label: 'May', value: 'May'},
-                  {label: 'June', value: 'June'},
-                  {label: 'July', value: 'July'},
-                  {label: 'August', value: 'August'},
-                  {label: 'September', value: 'September'},
-                  {label: 'October', value: 'October'},
-                  {label: 'November', value: 'November'},
-                  {label: 'December', value: 'December'},
-                ]}
-                value={month}
-                style={pickerSelectStyles}
-              />
-            </React.Fragment>
-          )}
-          <Caption>Day</Caption>
-          <TextInput
-            label="Day"
-            value={date}
-            keyboardType="number-pad"
-            mode="outlined"
-            onChangeText={text => setDate(text)}
-            inputAccessoryViewID={inputAccessoryViewID}
-          />
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={resetValues}>Cancel</Button>
-          <Button onPress={addData}>Add</Button>
-        </Dialog.Actions>
-      </Dialog>
-
-      <Dialog visible={updateModal} onDismiss={resetValues}>
-        <Dialog.Title>Editing {updateName}</Dialog.Title>
-        <Dialog.Content>
-          <Caption>Name</Caption>
-          <TextInput
-            label="Name"
-            value={updateName}
-            mode="outlined"
-            onChangeText={text => setUpdateName(text)}
-            inputAccessoryViewID={inputAccessoryViewID}
-          />
-          <Caption>Repeats</Caption>
-          <RNPickerSelect
-            onValueChange={value => setUpdateRepeat(value)}
-            items={[
-              {label: 'Yearly', value: 'yearly'},
-              {label: 'Monthly', value: 'monthly'},
-            ]}
-            value={updateRepeat}
-            style={pickerSelectStyles}
-          />
-          {updateRepeat === 'yearly' && (
-            <React.Fragment>
-              <Caption>Month</Caption>
-              <RNPickerSelect
-                onValueChange={value => setUpdateMonth(value)}
-                items={[
-                  {label: 'January', value: 'January'},
-                  {label: 'February', value: 'February'},
-                  {label: 'March', value: 'March'},
-                  {label: 'April', value: 'April'},
-                  {label: 'May', value: 'May'},
-                  {label: 'June', value: 'June'},
-                  {label: 'July', value: 'July'},
-                  {label: 'August', value: 'August'},
-                  {label: 'September', value: 'September'},
-                  {label: 'October', value: 'October'},
-                  {label: 'November', value: 'November'},
-                  {label: 'December', value: 'December'},
-                ]}
-                value={updateMonth}
-                style={pickerSelectStyles}
-              />
-            </React.Fragment>
-          )}
-          <Caption>Day</Caption>
-          <TextInput
-            label="Day"
-            value={updateDate}
-            keyboardType="number-pad"
-            mode="outlined"
-            onChangeText={text => setUpdateDate(text)}
-            inputAccessoryViewID={inputAccessoryViewID}
-          />
-        </Dialog.Content>
-        <Dialog.Actions>
-          <Button onPress={resetValues}>Cancel</Button>
-          <Button onPress={updateItem}>Update</Button>
-        </Dialog.Actions>
-      </Dialog>
 
       <Dialog visible={deleteModal} onDismiss={resetValues}>
         <Dialog.Title>Do you want to delete ?</Dialog.Title>
@@ -585,13 +615,15 @@ const App = () => {
         }}>
         {snackbarText}
       </Snackbar>
-      <InputAccessoryView nativeID={inputAccessoryViewID}>
-        <View style={styles.inputAccessoryView}>
-          <TouchableOpacity onPress={() => Keyboard.dismiss()}>
-            <Text style={styles.inputAccessoryViewText}> Done</Text>
-          </TouchableOpacity>
-        </View>
-      </InputAccessoryView>
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={inputAccessoryViewID}>
+          <View style={styles.inputAccessoryView}>
+            <TouchableOpacity onPress={() => Keyboard.dismiss()}>
+              <Text style={styles.inputAccessoryViewText}> Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </React.Fragment>
   );
 };
