@@ -11,6 +11,7 @@ import {
   List,
   Snackbar,
   Subheading,
+  Card,
 } from 'react-native-paper';
 import {
   FlatList,
@@ -19,6 +20,10 @@ import {
   useColorScheme,
   RefreshControl,
   StatusBar,
+  InputAccessoryView,
+  Keyboard,
+  View,
+  Text,
 } from 'react-native';
 import {
   getDBConnection,
@@ -244,47 +249,69 @@ const App = () => {
     );
   };
 
+  function getColor(remainingDays) {
+    let colorCode = colorScheme === 'dark' ? '#fff' : '#000';
+    if (remainingDays < 20) {
+      colorCode = '#ff0000';
+    } else if (remainingDays < 50) {
+      colorCode = '#ffa500';
+    } else if (remainingDays < 100) {
+      colorCode = '#ffff00';
+    } else {
+      colorCode = '#00ff00';
+    }
+    return colorCode;
+  }
   const JList = ({data}) => {
     return (
-      <List.Item
-        title={data.name}
-        description={`${data.remainingDays} days remaining`}
-        left={props => (
-          <List.Icon {...props} icon="calendar-alert" color="#33b5e5" />
-        )}
-        right={props => (
-          <React.Fragment>
-            <TouchableOpacity
-              onPress={() => {
-                setUpdateModal(true);
-                setUpdateId(data.id);
-                setUpdateName(data.name);
-                setUpdateDate(data.date.toString());
-                setUpdateMonth(data.month);
-                setUpdateRepeat(data.repeat);
-              }}>
-              <List.Icon
-                {...props}
-                icon="circle-edit-outline"
-                color="#FF8800"
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setDeleteModal(true);
-                setDeleteId(data.id);
-              }}>
-              <List.Icon {...props} icon="delete" color="#ff4444" />
-            </TouchableOpacity>
-          </React.Fragment>
-        )}
-        titleStyle={styles.listTitle}
-        descriptionStyle={styles.listDescription}
-        style={styles.listStyle}
-      />
+      <Card>
+        <List.Item
+          title={data.name}
+          description={`In ${data.remainingDays} days`}
+          left={props => (
+            <List.Icon {...props} icon="calendar-alert" color="#33b5e5" />
+          )}
+          right={props => (
+            <React.Fragment>
+              <TouchableOpacity
+                onPress={() => {
+                  setUpdateModal(true);
+                  setUpdateId(data.id);
+                  setUpdateName(data.name);
+                  setUpdateDate(data.date.toString());
+                  setUpdateMonth(data.month);
+                  setUpdateRepeat(data.repeat);
+                }}>
+                <List.Icon
+                  {...props}
+                  icon="circle-edit-outline"
+                  color="#FF8800"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setDeleteModal(true);
+                  setDeleteId(data.id);
+                }}>
+                <List.Icon {...props} icon="delete" color="#ff4444" />
+              </TouchableOpacity>
+            </React.Fragment>
+          )}
+          titleStyle={styles.listTitle}
+          descriptionStyle={[
+            {...styles.listDescription, color: getColor(data.remainingDays)},
+          ]}
+        />
+        <Card.Actions>
+          <Caption style={styles.cardFooterStyle}>
+            Repeats {data.repeat}, On {data.date} {data.month}
+          </Caption>
+        </Card.Actions>
+      </Card>
     );
   };
 
+  const inputAccessoryViewID = 'uniqueID';
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -293,14 +320,6 @@ const App = () => {
     textCenter: {
       textAlign: 'center',
     },
-    picker: {
-      backgroundColor: colorScheme === 'dark' ? '#121212' : '#f6f6f6',
-      color: colorScheme === 'dark' ? '#fff' : '#000',
-    },
-    toggleContainer: {
-      flexDirection: 'row-reverse',
-      marginLeft: 10,
-    },
     listTitle: {
       color: colorScheme === 'dark' ? '#fff' : '#000',
       fontSize: 20,
@@ -308,9 +327,9 @@ const App = () => {
       marginBottom: 5,
     },
     listDescription: {
-      color: colorScheme === 'dark' ? '#fff' : '#000',
-      fontSize: 15,
+      fontSize: 16,
       marginBottom: 3,
+      fontWeight: '400',
     },
     noData: {
       color: colorScheme === 'dark' ? '#fff' : '#000',
@@ -319,6 +338,30 @@ const App = () => {
       marginTop: 20,
       marginBottom: 20,
       textAlign: 'center',
+    },
+    inputAccessoryView: {
+      height: 45,
+      flexDirection: 'row-reverse',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 10,
+      backgroundColor: '#f8f8f8',
+      borderTopWidth: 1,
+      borderTopColor: '#dedede',
+      zIndex: 2,
+    },
+    inputAccessoryViewText: {
+      color: '#007aff',
+      fontWeight: '600',
+      fontSize: 17,
+      paddingTop: 1,
+      paddingRight: 11,
+    },
+    cardFooterStyle: {
+      fontSize: 15,
+      fontWeight: '600',
+      textTransform: 'capitalize',
+      marginLeft: 20,
     },
   });
 
@@ -359,11 +402,13 @@ const App = () => {
           hidden={false}
         />
         <AppHeader />
-        <ActivityIndicator
-          animating={loading}
-          color={colorScheme === 'dark' ? '#BB86FC' : '#6200ee'}
-          size="large"
-        />
+        {loading && (
+          <ActivityIndicator
+            animating={loading}
+            color={colorScheme === 'dark' ? '#BB86FC' : '#6200ee'}
+            size="medium"
+          />
+        )}
         {items.length > 0 ? (
           <FlatList
             data={updatedData}
@@ -402,8 +447,9 @@ const App = () => {
             mode="outlined"
             onChangeText={text => setName(text)}
             keyboardAppearance={colorScheme === 'dark' ? 'dark' : 'light'}
+            inputAccessoryViewID={inputAccessoryViewID}
           />
-          <Caption>Repeat</Caption>
+          <Caption>Repeats</Caption>
           <RNPickerSelect
             onValueChange={value => setRepeat(value)}
             items={[
@@ -411,7 +457,6 @@ const App = () => {
               {label: 'Monthly', value: 'monthly'},
             ]}
             value={repeat}
-            placeholder={{label: 'Select Type', value: 'yearly'}}
             style={pickerSelectStyles}
           />
           {repeat === 'yearly' && (
@@ -433,8 +478,7 @@ const App = () => {
                   {label: 'November', value: 'November'},
                   {label: 'December', value: 'December'},
                 ]}
-                value={repeat}
-                placeholder={{label: 'Select Month', value: 'January'}}
+                value={month}
                 style={pickerSelectStyles}
               />
             </React.Fragment>
@@ -446,6 +490,7 @@ const App = () => {
             keyboardType="number-pad"
             mode="outlined"
             onChangeText={text => setDate(text)}
+            inputAccessoryViewID={inputAccessoryViewID}
           />
         </Dialog.Content>
         <Dialog.Actions>
@@ -455,7 +500,7 @@ const App = () => {
       </Dialog>
 
       <Dialog visible={updateModal} onDismiss={resetValues}>
-        <Dialog.Title>Edit {updateName}</Dialog.Title>
+        <Dialog.Title>Editing {updateName}</Dialog.Title>
         <Dialog.Content>
           <Caption>Name</Caption>
           <TextInput
@@ -463,8 +508,9 @@ const App = () => {
             value={updateName}
             mode="outlined"
             onChangeText={text => setUpdateName(text)}
+            inputAccessoryViewID={inputAccessoryViewID}
           />
-          <Caption>Repeat</Caption>
+          <Caption>Repeats</Caption>
           <RNPickerSelect
             onValueChange={value => setUpdateRepeat(value)}
             items={[
@@ -472,14 +518,6 @@ const App = () => {
               {label: 'Monthly', value: 'monthly'},
             ]}
             value={updateRepeat}
-            placeholder={{
-              label: updateRepeat
-                ? updateRepeat === 'yearly'
-                  ? 'Yearly'
-                  : 'Monthy'
-                : 'Select Type',
-              value: updateRepeat,
-            }}
             style={pickerSelectStyles}
           />
           {updateRepeat === 'yearly' && (
@@ -502,7 +540,6 @@ const App = () => {
                   {label: 'December', value: 'December'},
                 ]}
                 value={updateMonth}
-                placeholder={{label: 'Select Month', value: updateMonth}}
                 style={pickerSelectStyles}
               />
             </React.Fragment>
@@ -514,6 +551,7 @@ const App = () => {
             keyboardType="number-pad"
             mode="outlined"
             onChangeText={text => setUpdateDate(text)}
+            inputAccessoryViewID={inputAccessoryViewID}
           />
         </Dialog.Content>
         <Dialog.Actions>
@@ -547,6 +585,13 @@ const App = () => {
         }}>
         {snackbarText}
       </Snackbar>
+      <InputAccessoryView nativeID={inputAccessoryViewID}>
+        <View style={styles.inputAccessoryView}>
+          <TouchableOpacity onPress={() => Keyboard.dismiss()}>
+            <Text style={styles.inputAccessoryViewText}> Done</Text>
+          </TouchableOpacity>
+        </View>
+      </InputAccessoryView>
     </React.Fragment>
   );
 };
