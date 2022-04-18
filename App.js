@@ -12,6 +12,7 @@ import {
   Snackbar,
   Subheading,
   Card,
+  Searchbar,
 } from 'react-native-paper';
 import {
   FlatList,
@@ -56,6 +57,7 @@ const App = () => {
 
   const [items, setItems] = useState([]);
   const [updatedData, setUpdatedData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [addModal, setAddModal] = useState(false);
   const [name, setName] = useState('');
   const [date, setDate] = useState('');
@@ -142,6 +144,7 @@ const App = () => {
         return a.remainingDays - b.remainingDays;
       });
       setUpdatedData(sorted);
+      setFilteredData(sorted);
     }
     if (items.length > 0) {
       recalculate();
@@ -254,7 +257,6 @@ const App = () => {
       </Appbar.Header>
     );
   };
-
   function getColor(remainingDays) {
     let colorCode = colorScheme === 'dark' ? '#fff' : '#000';
     if (remainingDays < 20) {
@@ -268,6 +270,7 @@ const App = () => {
     }
     return colorCode;
   }
+
   const JList = ({data}) => {
     return (
       <Card
@@ -314,7 +317,7 @@ const App = () => {
           //   </React.Fragment>
           // )}
           titleStyle={styles.listTitle}
-          titleNumberOfLines={2}
+          titleNumberOfLines={3}
           titleEllipsizeMode="tail"
           descriptionStyle={[
             {...styles.listDescription, color: getColor(data.remainingDays)},
@@ -413,6 +416,23 @@ const App = () => {
   const [showSnackbar, setShowSnackbar] = useState(false);
   const [snackbarText, setSnackbarText] = useState('');
 
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const onChangeSearch = query => setSearchQuery(query);
+
+  useEffect(() => {
+    if (searchQuery.length === 0) {
+      setFilteredData(updatedData);
+    } else {
+      let searchResults = updatedData.filter(function (item) {
+        return (
+          item.name.toLowerCase().indexOf(searchQuery.toLocaleLowerCase()) > -1
+        );
+      });
+      setFilteredData(searchResults);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
   return (
     <React.Fragment>
       <SafeAreaView style={styles.container}>
@@ -430,9 +450,14 @@ const App = () => {
             size="medium"
           />
         )}
+        <Searchbar
+          placeholder="Search"
+          onChangeText={onChangeSearch}
+          value={searchQuery}
+        />
         {items.length > 0 ? (
           <FlatList
-            data={updatedData}
+            data={filteredData}
             renderItem={({item}) => <JList data={item} />}
             keyExtractor={item => item.id}
             refreshControl={
@@ -613,6 +638,7 @@ const App = () => {
       <Snackbar
         visible={showSnackbar}
         onDismiss={() => setShowSnackbar(false)}
+        duration={2000}
         action={{
           label: 'close',
           onPress: () => {
