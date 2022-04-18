@@ -260,13 +260,13 @@ const App = () => {
   function getColor(remainingDays) {
     let colorCode = colorScheme === 'dark' ? '#fff' : '#000';
     if (remainingDays < 20) {
-      colorCode = '#ff0000';
+      colorCode = colorScheme === 'dark' ? '#CC0000' : '#ff4444';
     } else if (remainingDays < 50) {
-      colorCode = '#ffa500';
+     colorCode = colorScheme === 'dark' ? '#FF8800' : '#ffbb33';
     } else if (remainingDays < 100) {
-      colorCode = '#ffff00';
+      colorCode = colorScheme === 'dark' ? '#0099CC' : '#33b5e5';
     } else {
-      colorCode = '#00ff00';
+      colorCode = colorScheme === 'dark' ? '#007E33' : '#00C851';
     }
     return colorCode;
   }
