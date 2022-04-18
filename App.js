@@ -88,15 +88,19 @@ const App = () => {
         if (tmp.repeat === 'yearly') {
           const year = moment().format('YYYY');
           const currentDate = moment();
+          let _date = tmp.date.toString();
+          if (_date.length === 1) {
+            _date = `0${_date}`;
+          }
           const compareDate = moment(
-            new Date(`${year}-${monthMap[tmp.month]}-${tmp.date}`),
+            new Date(`${year}-${monthMap[tmp.month]}-${_date}`),
           );
           let dateDiff = compareDate.diff(currentDate, 'days');
           if (dateDiff < 0) {
             const _year = moment().add(1, 'year').format('YYYY');
             const _currentDate = moment();
             const _compareDate = moment(
-              new Date(`${_year}-${monthMap[tmp.month]}-${tmp.date}`),
+              new Date(`${_year}-${monthMap[tmp.month]}-${_date}`),
             );
             let dateDiff1 = _compareDate.diff(_currentDate, 'days');
             tmp.remainingDays = dateDiff1;
@@ -310,6 +314,8 @@ const App = () => {
           //   </React.Fragment>
           // )}
           titleStyle={styles.listTitle}
+          titleNumberOfLines={2}
+          titleEllipsizeMode="tail"
           descriptionStyle={[
             {...styles.listDescription, color: getColor(data.remainingDays)},
           ]}
