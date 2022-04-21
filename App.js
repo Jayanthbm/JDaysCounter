@@ -458,7 +458,7 @@ const App = () => {
   return (
     <GestureHandlerRootView style={styles.container}>
       <React.Fragment>
-        <SafeAreaView>
+        <SafeAreaView style={styles.container}>
           <StatusBar
             animated={true}
             backgroundColor={colorScheme === 'dark' ? '#121212' : '#6200ee'}
