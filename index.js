@@ -5,6 +5,7 @@ import {Provider as PaperProvider} from 'react-native-paper';
 import {name as appName} from './app.json';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 Icon.loadFont();
+import 'react-native-gesture-handler';
 export default function Main() {
   return (
     <PaperProvider>

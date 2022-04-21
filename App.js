@@ -50,6 +50,7 @@ const monthMap = {
   December: '12',
 };
 import RNPickerSelect from 'react-native-picker-select';
+import {Swipeable, GestureHandlerRootView} from 'react-native-gesture-handler';
 const App = () => {
   const colorScheme = useColorScheme();
   const [loading, setLoading] = useState(false);
@@ -257,12 +258,13 @@ const App = () => {
       </Appbar.Header>
     );
   };
+
   function getColor(remainingDays) {
     let colorCode = colorScheme === 'dark' ? '#fff' : '#000';
     if (remainingDays < 20) {
       colorCode = colorScheme === 'dark' ? '#CC0000' : '#ff4444';
     } else if (remainingDays < 50) {
-     colorCode = colorScheme === 'dark' ? '#FF8800' : '#ffbb33';
+      colorCode = colorScheme === 'dark' ? '#FF8800' : '#ffbb33';
     } else if (remainingDays < 100) {
       colorCode = colorScheme === 'dark' ? '#0099CC' : '#33b5e5';
     } else {
@@ -271,64 +273,66 @@ const App = () => {
     return colorCode;
   }
 
+  const rightSwipeActions = () => {
+    return (
+      <TouchableOpacity
+        style={styles.deleteSwipeBackground}
+        onPress={() => {
+          setDeleteModal(true);
+        }}>
+        <Text style={styles.swipeText}>Delete</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const leftSwipeActions = () => {
+    return (
+      <TouchableOpacity
+        style={styles.editSwipeBackground}
+        onPress={() => {
+          setUpdateModal(true);
+        }}>
+        <Text style={styles.swipeText}>Edit</Text>
+      </TouchableOpacity>
+    );
+  };
+
   const JList = ({data}) => {
     return (
-      <Card
-        style={styles.cardStyle}
-        onLongPress={() => {
-          setUpdateModal(true);
+      <Swipeable
+        renderLeftActions={leftSwipeActions}
+        onSwipeableLeftOpen={() => {
           setUpdateId(data.id);
-          setDeleteId(data.id);
           setUpdateName(data.name);
           setUpdateDate(data.date.toString());
           setUpdateMonth(data.month);
           setUpdateRepeat(data.repeat);
+        }}
+        renderRightActions={rightSwipeActions}
+        onSwipeableRightOpen={() => {
+          setDeleteId(data.id);
         }}>
-        <List.Item
-          title={data.name}
-          description={`In ${data.remainingDays} days`}
-          left={props => (
-            <List.Icon {...props} icon="calendar-alert" color="#33b5e5" />
-          )}
-          // right={props => (
-          //   <React.Fragment>
-          //     <TouchableOpacity
-          //       onPress={() => {
-          //         setUpdateModal(true);
-          //         setUpdateId(data.id);
-          //         setUpdateName(data.name);
-          //         setUpdateDate(data.date.toString());
-          //         setUpdateMonth(data.month);
-          //         setUpdateRepeat(data.repeat);
-          //       }}>
-          //       <List.Icon
-          //         {...props}
-          //         icon="circle-edit-outline"
-          //         color="#FF8800"
-          //       />
-          //     </TouchableOpacity>
-          //     <TouchableOpacity
-          //       onPress={() => {
-          //         setDeleteModal(true);
-          //         setDeleteId(data.id);
-          //       }}>
-          //       <List.Icon {...props} icon="delete" color="#ff4444" />
-          //     </TouchableOpacity>
-          //   </React.Fragment>
-          // )}
-          titleStyle={styles.listTitle}
-          titleNumberOfLines={3}
-          titleEllipsizeMode="tail"
-          descriptionStyle={[
-            {...styles.listDescription, color: getColor(data.remainingDays)},
-          ]}
-        />
-        <Card.Actions>
-          <Caption style={styles.cardFooterStyle}>
-            Repeats {data.repeat}, On {data.date} {data.month}
-          </Caption>
-        </Card.Actions>
-      </Card>
+        <Card style={styles.cardStyle}>
+          <List.Item
+            title={data.name}
+            description={`In ${data.remainingDays} days`}
+            left={props => (
+              <List.Icon {...props} icon="calendar-alert" color="#33b5e5" />
+            )}
+            titleStyle={styles.listTitle}
+            titleNumberOfLines={3}
+            titleEllipsizeMode="tail"
+            descriptionStyle={[
+              {...styles.listDescription, color: getColor(data.remainingDays)},
+            ]}
+          />
+          <Card.Actions>
+            <Caption style={styles.cardFooterStyle}>
+              Repeats {data.repeat}, On {data.date} {data.month}
+            </Caption>
+          </Card.Actions>
+        </Card>
+      </Swipeable>
     );
   };
 
@@ -387,6 +391,24 @@ const App = () => {
     cardStyle: {
       marginBottom: 10,
     },
+    deleteSwipeBackground: {
+      backgroundColor: colorScheme === 'dark' ? '#CC0000' : '#ff4444',
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+      marginBottom: 10,
+    },
+    editSwipeBackground: {
+      backgroundColor: colorScheme === 'dark' ? '#0099CC' : '#33b5e5',
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+      marginBottom: 10,
+    },
+    swipeText: {
+      color: '#fff',
+      paddingHorizontal: 20,
+      fontWeight: '600',
+      paddingVertical: 20,
+    },
   });
 
   const pickerSelectStyles = StyleSheet.create({
@@ -434,54 +456,61 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
   return (
-    <React.Fragment>
-      <SafeAreaView style={styles.container}>
-        <StatusBar
-          animated={true}
-          backgroundColor={colorScheme === 'dark' ? '#121212' : '#6200ee'}
-          barStyle={colorScheme === 'dark' ? 'dark-content' : 'light-content'}
-          hidden={false}
-        />
-        <AppHeader />
-        {loading && (
-          <ActivityIndicator
-            animating={loading}
-            color={colorScheme === 'dark' ? '#BB86FC' : '#6200ee'}
-            size="medium"
+    <GestureHandlerRootView style={styles.container}>
+      <React.Fragment>
+        <SafeAreaView>
+          <StatusBar
+            animated={true}
+            backgroundColor={colorScheme === 'dark' ? '#121212' : '#6200ee'}
+            barStyle={colorScheme === 'dark' ? 'dark-content' : 'light-content'}
+            hidden={false}
           />
-        )}
-        <Searchbar
-          placeholder="Search"
-          onChangeText={onChangeSearch}
-          value={searchQuery}
-        />
-        {items.length > 0 ? (
-          <FlatList
-            data={filteredData}
-            renderItem={({item}) => <JList data={item} />}
-            keyExtractor={item => item.id}
-            refreshControl={
-              <RefreshControl
-                refreshing={loading}
-                onRefresh={() => setReload(!reload)}
-              />
-            }
+          <AppHeader />
+          {loading && (
+            <ActivityIndicator
+              animating={loading}
+              color={colorScheme === 'dark' ? '#BB86FC' : '#6200ee'}
+              size="medium"
+            />
+          )}
+          <Searchbar
+            placeholder="Search"
+            onChangeText={onChangeSearch}
+            value={searchQuery}
           />
-        ) : (
-          <React.Fragment>
-            <Subheading style={styles.noData}>No Items found</Subheading>
-            <Button
-              icon="plus-box"
-              mode="text"
-              uppercase={false}
-              size="large"
-              disabled={loading}
-              onPress={() => setAddModal(true)}>
-              Add Item
-            </Button>
-          </React.Fragment>
-        )}
-        <Dialog visible={addModal} onDismiss={resetValues}>
+          {items.length > 0 ? (
+            <FlatList
+              data={filteredData}
+              renderItem={({item}) => <JList data={item} />}
+              keyExtractor={item => item.id}
+              refreshControl={
+                <RefreshControl
+                  refreshing={loading}
+                  onRefresh={() => setReload(!reload)}
+                />
+              }
+            />
+          ) : (
+            <React.Fragment>
+              <Subheading style={styles.noData}>No Items found</Subheading>
+              <Button
+                icon="plus-box"
+                mode="text"
+                uppercase={false}
+                size="large"
+                disabled={loading}
+                onPress={() => setAddModal(true)}>
+                Add Item
+              </Button>
+            </React.Fragment>
+          )}
+        </SafeAreaView>
+
+        <Dialog
+          visible={addModal}
+          onDismiss={() => {
+            setAddModal(false);
+          }}>
           <Dialog.Title>Add New</Dialog.Title>
           <Dialog.Content>
             <Caption>Name</Caption>
@@ -547,7 +576,12 @@ const App = () => {
             <Button onPress={addData}>Add</Button>
           </Dialog.Actions>
         </Dialog>
-        <Dialog visible={updateModal} onDismiss={resetValues}>
+
+        <Dialog
+          visible={updateModal}
+          onDismiss={() => {
+            setUpdateModal(false);
+          }}>
           <Dialog.Title>Editing {updateName}</Dialog.Title>
           <Dialog.Content>
             <Caption>Name</Caption>
@@ -606,12 +640,6 @@ const App = () => {
           <Dialog.Actions>
             <Button
               onPress={() => {
-                setDeleteModal(true);
-              }}>
-              Delete
-            </Button>
-            <Button
-              onPress={() => {
                 setUpdateModal(false);
               }}>
               Cancel
@@ -619,44 +647,44 @@ const App = () => {
             <Button onPress={updateItem}>Update</Button>
           </Dialog.Actions>
         </Dialog>
-      </SafeAreaView>
 
-      <Dialog visible={deleteModal} onDismiss={resetValues}>
-        <Dialog.Title>Do you want to delete ?</Dialog.Title>
+        <Dialog visible={deleteModal} onDismiss={() => setDeleteModal(false)}>
+          <Dialog.Title>Do you want to delete ?</Dialog.Title>
 
-        <Dialog.Actions>
-          <Button onPress={resetValues}>Cancel</Button>
-          <Button
-            onPress={() => {
-              deleteItem(deleteId);
-            }}>
-            Yes
-          </Button>
-        </Dialog.Actions>
-      </Dialog>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteModal(false)}>Cancel</Button>
+            <Button
+              onPress={() => {
+                deleteItem(deleteId);
+              }}>
+              Yes
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
 
-      <Snackbar
-        visible={showSnackbar}
-        onDismiss={() => setShowSnackbar(false)}
-        duration={2000}
-        action={{
-          label: 'close',
-          onPress: () => {
-            setShowSnackbar(false);
-          },
-        }}>
-        {snackbarText}
-      </Snackbar>
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={inputAccessoryViewID}>
-          <View style={styles.inputAccessoryView}>
-            <TouchableOpacity onPress={() => Keyboard.dismiss()}>
-              <Text style={styles.inputAccessoryViewText}> Done</Text>
-            </TouchableOpacity>
-          </View>
-        </InputAccessoryView>
-      )}
-    </React.Fragment>
+        <Snackbar
+          visible={showSnackbar}
+          onDismiss={() => setShowSnackbar(false)}
+          duration={2000}
+          action={{
+            label: 'close',
+            onPress: () => {
+              setShowSnackbar(false);
+            },
+          }}>
+          {snackbarText}
+        </Snackbar>
+        {Platform.OS === 'ios' && (
+          <InputAccessoryView nativeID={inputAccessoryViewID}>
+            <View style={styles.inputAccessoryView}>
+              <TouchableOpacity onPress={() => Keyboard.dismiss()}>
+                <Text style={styles.inputAccessoryViewText}> Done</Text>
+              </TouchableOpacity>
+            </View>
+          </InputAccessoryView>
+        )}
+      </React.Fragment>
+    </GestureHandlerRootView>
   );
 };
 
