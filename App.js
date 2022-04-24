@@ -477,6 +477,7 @@ const App = () => {
             placeholder="Search"
             onChangeText={onChangeSearch}
             value={searchQuery}
+            inputAccessoryViewID={inputAccessoryViewID}
           />
           {items.length > 0 ? (
             <FlatList
