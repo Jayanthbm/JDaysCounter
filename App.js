@@ -110,6 +110,12 @@ const App = () => {
             if (dateDiff1 > 30) {
               tmp.remainingMonths = (dateDiff1 / 30.417).toFixed(2);
             }
+          } else if (dateDiff === 0) {
+            if (moment().isSame(compareDate, 'day')) {
+              tmp.remainingDays = -2;
+            } else {
+              tmp.remainingDays = -1;
+            }
           } else {
             tmp.remainingDays = dateDiff;
             if (dateDiff > 30) {
@@ -135,6 +141,12 @@ const App = () => {
             const _compareDate = moment(new Date(`${year}-${month_}-${_date}`));
             const _dateDiff = _compareDate.diff(_currentDate, 'days');
             tmp.remainingDays = _dateDiff;
+          } else if (dateDiff === 0) {
+            if (moment().isSame(compareDate, 'day')) {
+              tmp.remainingDays = -2;
+            } else {
+              tmp.remainingDays = -1;
+            }
           } else {
             tmp.remainingDays = dateDiff;
           }
@@ -315,7 +327,13 @@ const App = () => {
         <Card style={styles.cardStyle}>
           <List.Item
             title={data.name}
-            description={`In ${data.remainingDays} days`}
+            description={
+              data.remainingDays > 0
+                ? `In ${data.remainingDays} days`
+                : data?.remainingDays === -2
+                ? 'Today'
+                : 'Tomorrow'
+            }
             left={props => (
               <List.Icon {...props} icon="calendar-alert" color="#33b5e5" />
             )}
